@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lønnssimulator – Servicemarked Bergen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --moller-blue: #1400FF;
+  --moller-navy: #1A1A3E;
+  --moller-coral: #E8503A;
+  --moller-cream: #EDEBE5;
+  --moller-gray: #6B6B7B;
+  --moller-white: #FFFFFF;
+  --moller-light: #F7F6F3;
+  --moller-green: #1B8C5A;
+  --moller-red: #D4382C;
+  --border: #D8D5CE;
+  --shadow-sm: 0 1px 3px rgba(26,26,62,0.06);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--moller-cream);
+  color: var(--moller-navy);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.app-header {
+  background: var(--moller-navy);
+  color: var(--moller-white);
+  padding: 20px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 20px rgba(26,26,62,0.3);
+}
+.app-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.app-header .subtitle { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+.logo-mark {
+  width: 36px; height: 36px; background: var(--moller-blue); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: white; margin-right: 14px; flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; }
+.tab-bar { display: flex; gap: 4px; background: rgba(255,255,255,0.08); border-radius: 8px; padding: 3px; }
+.tab-btn {
+  padding: 7px 18px; border: none; background: transparent;
+  color: rgba(255,255,255,0.5); font-family: inherit; font-size: 13px;
+  font-weight: 500; cursor: pointer; border-radius: 6px; transition: all 0.2s;
+}
+.tab-btn:hover { color: rgba(255,255,255,0.8); }
+.tab-btn.active { background: var(--moller-blue); color: white; }
+.main-content { max-width: 1400px; margin: 0 auto; padding: 24px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.controls-bar {
+  background: var(--moller-white); border-radius: var(--radius);
+  padding: 20px 24px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+}
+.controls-row { display: flex; gap: 16px; align-items: end; flex-wrap: wrap; }
+.control-group { display: flex; flex-direction: column; gap: 5px; }
+.control-group label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--moller-gray);
+}
+.control-group select,
+.control-group input[type="number"] {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  padding: 8px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--moller-light);
+  color: var(--moller-navy); min-width: 160px; transition: border-color 0.2s;
+}
+.control-group select:focus, .control-group input:focus {
+  outline: none; border-color: var(--moller-blue);
+  box-shadow: 0 0 0 3px rgba(20,0,255,0.08);
+}
+.comparison-section {
+  background: var(--moller-white); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  overflow: hidden; margin-bottom: 20px;
+}
+.section-header {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.section-header h2 { font-size: 15px; font-weight: 700; }
+.comp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.comp-table thead th {
+  padding: 10px 16px; text-align: right; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px; color: var(--moller-gray);
+  border-bottom: 2px solid var(--border); background: var(--moller-light);
+}
+.comp-table thead th:first-child { text-align: left; min-width: 180px; }
+.comp-table tbody td {
+  padding: 9px 16px; text-align: right;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+  border-bottom: 1px solid #ECEAE5;
+}
+.comp-table tbody td:first-child {
+  text-align: left; font-family: 'DM Sans', sans-serif; font-weight: 500;
+}
+.comp-table tbody tr:hover { background: rgba(20,0,255,0.02); }
+.comp-table tbody tr.row-total { background: var(--moller-light); font-weight: 700; }
+.comp-table tbody tr.row-total td {
+  border-top: 2px solid var(--moller-navy); padding-top: 11px; padding-bottom: 11px; font-size: 13.5px;
+}
+.comp-table tbody tr.row-diff td { color: var(--moller-coral); font-weight: 600; font-style: italic; border-bottom: none; }
+.comp-table tbody tr.row-diff td.positive { color: var(--moller-green); }
+.comp-table tbody tr.row-diff td.negative { color: var(--moller-red); }
+.comp-table .scenario-header { font-size: 10px; color: var(--moller-gray); font-weight: 500; }
+.col-today { background: rgba(20,0,255,0.02); }
+.col-new { background: rgba(232,80,58,0.02); }
+.rates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.rate-card {
+  background: var(--moller-white); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.rate-card-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rate-card-header h3 { font-size: 13px; font-weight: 700; }
+.model-tag {
+  font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tag-dagens { background: var(--moller-blue); color: white; }
+.tag-ny { background: var(--moller-coral); color: white; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rate-table th {
+  padding: 8px 14px; text-align: right; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.3px; color: var(--moller-gray);
+  background: var(--moller-light); border-bottom: 1px solid var(--border);
+}
+.rate-table th:first-child { text-align: left; }
+.rate-table td {
+  padding: 6px 14px; text-align: right; border-bottom: 1px solid #ECEAE5;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+}
+.rate-table td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+.rate-table input[type="number"] {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  width: 80px; padding: 4px 8px; border: 1.5px solid var(--border);
+  border-radius: 4px; text-align: right; background: #FFFCF0;
+  color: var(--moller-coral); font-weight: 500;
+}
+.rate-table input[type="number"]:focus {
+  outline: none; border-color: var(--moller-coral);
+  box-shadow: 0 0 0 2px rgba(232,80,58,0.1);
+}
+.rate-table .static-val { color: var(--moller-blue); font-weight: 500; }
+.info-bar {
+  background: rgba(20,0,255,0.04); border: 1px solid rgba(20,0,255,0.1);
+  border-radius: var(--radius-sm); padding: 12px 18px; font-size: 12px;
+  color: var(--moller-navy); margin-bottom: 20px; line-height: 1.6;
+}
+.info-bar strong { color: var(--moller-blue); }
+.btn-reset {
+  padding: 8px 16px; border: 1.5px solid var(--border);
+  background: var(--moller-white); color: var(--moller-gray);
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.btn-reset:hover { border-color: var(--moller-coral); color: var(--moller-coral); }
+.table-scroll { overflow-x: auto; }
+.comp-table thead th:first-child, .comp-table tbody td:first-child { position: sticky; left: 0; background: inherit; z-index: 1; }
+.comp-table thead th:first-child { background: var(--moller-light); }
+.comp-table tbody tr:hover td:first-child { background: rgba(20,0,255,0.02); }
+.comp-table tbody tr.row-total td:first-child { background: var(--moller-light); }
+.section-divider {
+  font-size: 13px; font-weight: 700; color: var(--moller-navy);
+  margin: 28px 0 12px 0; padding-bottom: 6px;
+  border-bottom: 2px solid var(--moller-blue);
+  display: flex; align-items: center; gap: 8px;
+}
+.section-divider .icon { font-size: 15px; }
+@media (max-width: 900px) {
+  .rates-grid { grid-template-columns: 1fr; }
+  .controls-row { flex-direction: column; }
+  .control-group select, .control-group input { min-width: 100%; }
+  .main-content { padding: 16px; }
+  .tab-bar { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-left">
+    <div class="logo-mark">MB</div>
+    <div>
+      <h1>Lønnssimulator Servicemarked</h1>
+      <div class="subtitle">Møller Bil Bergen AS · 2025/2026</div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('sammenligning')">Sammenligning</button>
+    <button class="tab-btn" onclick="switchTab('timesatser')">Timesatser</button>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- ===== TAB 1: SAMMENLIGNING ===== -->
+  <div id="tab-sammenligning" class="tab-content active">
+
+    <div class="controls-bar">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Stilling</label>
+          <select id="selStilling" onchange="onStillingChange()">
+            <option value="MEK">Fagarbeider mekanisk</option>
+            <option value="HJP_M">Hjelpearbeider mekanisk</option>
+            <option value="AUDI">Fagtekniker / Diagnosetekniker Audi</option>
+            <option value="FAG_D">Fagarbeider delelager</option>
+            <option value="HJP_D">Hjelpearbeider delelager</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Ansiennitet</label>
+          <select id="selAnsiennitet" onchange="recalcAll()">
+            <option value="0">Ny-utlært / Begynnerlønn</option>
+            <option value="1">1 år</option>
+            <option value="2">2 år</option>
+            <option value="3" selected>3 år</option>
+            <option value="4">4 år</option>
+            <option value="5">5 år</option>
+            <option value="6">6 år</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Arbeidsdager / mnd</label>
+          <input type="number" id="inpArbeidsdager" value="21" min="15" max="25" step="1" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Mønstret tid / dag (t)</label>
+          <input type="number" id="inpMonstret" value="7.0" min="5" max="10" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Adm. tid / dag (t)</label>
+          <input type="number" id="inpAdmin" value="0.5" min="0" max="3" step="0.25" onchange="recalcAll()">
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-bar" id="deleControls" style="display:none;">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Bruttofortjeneste (%)</label>
+          <input type="number" id="inpBrutto" value="37" min="30" max="50" step="1" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Dekningsbidrag totalt servicemarked (%)</label>
+          <input type="number" id="inpDB" value="23" min="15" max="35" step="1" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>CEM/SCX oppnådd</label>
+          <select id="selCEM" onchange="recalcAll()">
+            <option value="1">Ja</option>
+            <option value="0">Nei</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-bar" id="audiControls" style="display:none;">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>DB verksted pr forhandler (%)</label>
+          <input type="number" id="inpDBAudi" value="16" min="10" max="30" step="1" onchange="recalcAll()">
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      Tabellen viser simulert <strong>månedslønn</strong> ved ulike produktivitetsnivåer.
+      <strong>Dagens modell</strong> (blå) bruker gjeldende satser.
+      <strong>Ny modell</strong> (oransje) bruker dine egendefinerte satser – rediger bonussatser under tabellen og timesatser i fanen «Timesatser».
+    </div>
+
+    <div class="comparison-section">
+      <div class="section-header">
+        <h2 id="compTitle">Fagarbeider mekanisk · 3 år ansiennitet</h2>
+        <button class="btn-reset" onclick="resetNyModell()">↺ Tilbakestill ny modell</button>
+      </div>
+      <div class="table-scroll">
+        <table class="comp-table" id="compTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- Bonussatser MEK/HJP_M -->
+    <div id="varMekBonus" style="display:none;">
+      <div class="section-divider"><span class="icon">⚙</span> Bonussatser – Solgte timer (mekanisk)</div>
+      <div class="rates-grid">
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus solgte timer</h3><span class="model-tag tag-dagens">Dagens</span></div>
+          <table class="rate-table" id="tblBonusMekDagens"><thead><tr><th>Solgte t/dag</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus solgte timer</h3><span class="model-tag tag-ny">Ny modell</span></div>
+          <table class="rate-table" id="tblBonusMekNy"><thead><tr><th>Solgte t/dag</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bonussatser AUDI -->
+    <div id="varAudiBonus" style="display:none;">
+      <div class="section-divider"><span class="icon">⚙</span> Bonussatser – Audi fagtekniker</div>
+      <div class="rates-grid">
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus Audi fagtekniker</h3><span class="model-tag tag-dagens">Dagens</span></div>
+          <table class="rate-table" id="tblAudiDagens"><thead><tr><th>Betingelse</th><th>Beløp (kr)</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus Audi fagtekniker</h3><span class="model-tag tag-ny">Ny modell</span></div>
+          <table class="rate-table" id="tblAudiNy"><thead><tr><th>Betingelse</th><th>Beløp (kr)</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bonussatser delelager bruttofortjeneste -->
+    <div id="varDeleBrutto" style="display:none;">
+      <div class="section-divider"><span class="icon">⚙</span> Bonussatser – Bruttofortjeneste (delelager)</div>
+      <div class="rates-grid">
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus bruttofortjeneste</h3><span class="model-tag tag-dagens">Dagens</span></div>
+          <table class="rate-table" id="tblDeleBruttoDagens"><thead><tr><th>BF over (%)</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus bruttofortjeneste</h3><span class="model-tag tag-ny">Ny modell</span></div>
+          <table class="rate-table" id="tblDeleBruttoNy"><thead><tr><th>BF over (%)</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bonussatser delelager dekningsbidrag -->
+    <div id="varDeleDB" style="display:none;">
+      <div class="section-divider"><span class="icon">⚙</span> Bonussatser – Dekningsbidrag (delelager)</div>
+      <div class="rates-grid">
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus dekningsbidrag</h3><span class="model-tag tag-dagens">Dagens</span></div>
+          <table class="rate-table" id="tblDeleDBDagens"><thead><tr><th>DB over (%)</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Bonus dekningsbidrag</h3><span class="model-tag tag-ny">Ny modell</span></div>
+          <table class="rate-table" id="tblDeleDBNy"><thead><tr><th>DB over (%)</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kvalitetsbonus delelager -->
+    <div id="varKvalitet" style="display:none;">
+      <div class="section-divider"><span class="icon">⚙</span> Kvalitetsbonus CEM/SCX (tertial, delelager)</div>
+      <div class="rates-grid">
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Kvalitetsbonus CEM/SCX</h3><span class="model-tag tag-dagens">Dagens</span></div>
+          <table class="rate-table"><thead><tr><th>Nivå</th><th>Kr/mønstret time</th></tr></thead>
+          <tbody><tr><td>CEM/SCX oppnådd</td><td class="static-val">12</td></tr></tbody></table>
+        </div>
+        <div class="rate-card">
+          <div class="rate-card-header"><h3>Kvalitetsbonus CEM/SCX</h3><span class="model-tag tag-ny">Ny modell</span></div>
+          <table class="rate-table" id="tblKvalitetNy"><thead><tr><th>Nivå</th><th>Kr/mønstret time</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== TAB 2: TIMESATSER ===== -->
+  <div id="tab-timesatser" class="tab-content">
+    <div class="info-bar">
+      <strong>Dagens modell</strong> (blå, venstre) er låst til gjeldende lønnsavtale.
+      <strong>Ny modell</strong> (oransje, høyre) kan du redigere fritt. Endringer reflekteres i sammenligningen.
+      <button class="btn-reset" onclick="resetNyModell()" style="margin-left:12px;">↺ Tilbakestill ny modell</button>
+    </div>
+    <div class="rates-grid">
+      <div class="rate-card">
+        <div class="rate-card-header"><h3>Faste timesatser (eks smuss)</h3><span class="model-tag tag-dagens">Dagens</span></div>
+        <div id="tblTimesatserDagens"></div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-card-header"><h3>Faste timesatser (eks smuss)</h3><span class="model-tag tag-ny">Ny modell</span></div>
+        <div id="tblTimesatserNy"></div>
+      </div>
+    </div>
+    <div class="rates-grid">
+      <div class="rate-card">
+        <div class="rate-card-header"><h3>Smusstillegg (mekanisk)</h3><span class="model-tag tag-dagens">Dagens</span></div>
+        <table class="rate-table"><thead><tr><th>Tillegg</th><th>Kr/time</th></tr></thead>
+        <tbody><tr><td>Smusstillegg</td><td class="static-val">8,70</td></tr></tbody></table>
+      </div>
+      <div class="rate-card">
+        <div class="rate-card-header"><h3>Smusstillegg (mekanisk)</h3><span class="model-tag tag-ny">Ny modell</span></div>
+        <table class="rate-table" id="tblSmussNy"><thead><tr><th>Tillegg</th><th>Kr/time</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const SMUSS = 8.70;
+const TIMESATSER = {
+  MEK: [255.13, 260.88, 264.02, 273.84, 276.35, 278.86, 281.50],
+  AUDI: [340.93, 340.93, 340.93, 340.93, 340.93, 340.93, 340.93],
+  HJP_M: [213.23, 221.38, 226.92, 232.20, 242.10, 248.24, 252.10],
+  FAG_D: [255.34, 261.09, 262.76, 266.73, 269.14, 273.00, 277.91],
+  HJP_D: [221.50, 231.00, 236.53, 241.70, 247.80, 254.20, 256.60],
+};
+const ANS_LABELS = ['Ny-utlært','1 år','2 år','3 år','4 år','5 år','6 år'];
+const ANS_LABELS_HJP = ['Begynnerlønn','1 år','2 år','3 år','4 år','5 år','6 år'];
+const STILLING_NAMES = {
+  MEK:'Fagarbeider mekanisk', AUDI:'Fagtekniker / Diagnosetekniker Audi',
+  HJP_M:'Hjelpearbeider mekanisk', FAG_D:'Fagarbeider delelager', HJP_D:'Hjelpearbeider delelager',
+};
+const BONUS_SOLGTE_TIMER = [
+  {fra:5.00,kr:8},{fra:5.50,kr:14},{fra:6.00,kr:29},{fra:6.50,kr:46},
+  {fra:7.00,kr:76},{fra:7.50,kr:86},{fra:8.00,kr:106},{fra:8.50,kr:116},
+  {fra:9.00,kr:131},{fra:9.50,kr:136},{fra:10.00,kr:141},{fra:10.50,kr:146},{fra:11.00,kr:151},
+];
+const AUDI_BONUS = {prod40:3500, maxDB:5500, dbTerskel:18};
+const DELE_BRUTTO = [{over:35,kr:4},{over:36,kr:6},{over:37,kr:10},{over:38,kr:13}];
+const DELE_DB = [{over:21,kr:5},{over:22,kr:7},{over:23,kr:10},{over:25,kr:13}];
+const KVALITET_CEM = 12;
+
+let nyTimesatser = JSON.parse(JSON.stringify(TIMESATSER));
+let nyBonusSolgte = BONUS_SOLGTE_TIMER.map(b=>({...b}));
+let nyAudiBonus = {...AUDI_BONUS};
+let nyDeleBrutto = DELE_BRUTTO.map(b=>({...b}));
+let nyDeleDB = DELE_DB.map(b=>({...b}));
+let nyKvalitetCEM = KVALITET_CEM;
+let nySmuss = SMUSS;
+
+function getScenarios(s) {
+  if (['MEK','HJP_M'].includes(s)) return [{label:'Lav (5,5 t/dag)',soldPerDay:5.5},{label:'Middels (6,5 t/dag)',soldPerDay:6.5},{label:'God (8,0 t/dag)',soldPerDay:8.0},{label:'Høy (10,0 t/dag)',soldPerDay:10.0}];
+  if (s==='AUDI') return [{label:'Under terskel (2,5 t)',soldPerDay:2.5},{label:'På terskel (3,0 t)',soldPerDay:3.0},{label:'God (4,0 t)',soldPerDay:4.0},{label:'Høy (5,0 t)',soldPerDay:5.0}];
+  return [{label:'Scenario valgt i kontroller',soldPerDay:0}];
+}
+
+function lookupBonus(val, table) {
+  let r=0; for(let i=table.length-1;i>=0;i--){if(val>=table[i].fra||val>=table[i].over){r=table[i].kr;break;}} return r;
+}
+
+function calcMonthly(stilling, ans, soldPerDay, model) {
+  const ad = parseFloat(document.getElementById('inpArbeidsdager').value)||21;
+  const mt = parseFloat(document.getElementById('inpMonstret').value)||7.0;
+  const at = parseFloat(document.getElementById('inpAdmin').value)||0.5;
+  const bf = parseFloat(document.getElementById('inpBrutto').value)||37;
+  const db = parseFloat(document.getElementById('inpDB').value)||23;
+  const dba = parseFloat(document.getElementById('inpDBAudi').value)||16;
+  const cem = document.getElementById('selCEM').value==='1';
+  const ny = model==='ny';
+  const ts = ny?nyTimesatser:TIMESATSER;
+  const bs = ny?nyBonusSolgte:BONUS_SOLGTE_TIMER;
+  const ap = ny?nyAudiBonus:AUDI_BONUS;
+  const dbt = ny?nyDeleBrutto:DELE_BRUTTO;
+  const ddb = ny?nyDeleDB:DELE_DB;
+  const kc = ny?nyKvalitetCEM:KVALITET_CEM;
+  const sm = ny?nySmuss:SMUSS;
+  const tl = ts[stilling][ans];
+  const iM = ['MEK','HJP_M'].includes(stilling);
+  const iA = stilling==='AUDI';
+  const iD = ['FAG_D','HJP_D'].includes(stilling);
+  const mtm = mt*ad;
+  const em = (mt-at)*ad;
+  let fl = tl*mtm;
+  let smu = (iM||iA)?sm*mtm:0;
+  let bon = 0;
+  if(iM){let b=0;for(let i=bs.length-1;i>=0;i--){if(soldPerDay>=bs[i].fra){b=bs[i].kr;break;}}bon=b*em;}
+  else if(iA){const pp=soldPerDay/(mt>0?mt:7.5)*100;if(pp>=40)bon=dba>ap.dbTerskel?ap.maxDB:ap.prod40;}
+  else if(iD){let b1=0,b2=0;for(let i=dbt.length-1;i>=0;i--){if(bf>=dbt[i].over){b1=dbt[i].kr;break;}}for(let i=ddb.length-1;i>=0;i--){if(db>=ddb[i].over){b2=ddb[i].kr;break;}}const b3=cem?kc:0;bon=(b1+b2+b3)*em;}
+  return {timelonn:tl,fastLonn:Math.round(fl),smussMnd:Math.round(smu),bonusMnd:Math.round(bon),totalMnd:Math.round(fl+smu+bon)};
+}
+
+function fmt(n){return n.toLocaleString('nb-NO',{maximumFractionDigits:0});}
+function fmtDec(n,d){return n.toLocaleString('nb-NO',{minimumFractionDigits:d,maximumFractionDigits:d});}
+
+function recalcAll() {
+  const st = document.getElementById('selStilling').value;
+  const ans = parseInt(document.getElementById('selAnsiennitet').value);
+  const iM = ['MEK','HJP_M'].includes(st);
+  const iA = st==='AUDI';
+  const iD = ['FAG_D','HJP_D'].includes(st);
+  const al = (st==='HJP_M'||st==='HJP_D')?ANS_LABELS_HJP[ans]:ANS_LABELS[ans];
+  document.getElementById('compTitle').textContent = `${STILLING_NAMES[st]} · ${al}`;
+  const sc = getScenarios(st);
+  const thead = document.querySelector('#compTable thead');
+  const tbody = document.querySelector('#compTable tbody');
+
+  if(iD){
+    thead.innerHTML='<tr><th></th><th class="col-today">Dagens modell</th><th class="col-new">Ny modell</th><th>Differanse</th></tr>';
+    const d=calcMonthly(st,ans,0,'dagens'), n=calcMonthly(st,ans,0,'ny');
+    const rows=[['Timelønn',fmtDec(d.timelonn,2),fmtDec(n.timelonn,2),n.timelonn-d.timelonn,true],['Fast lønn',fmt(d.fastLonn),fmt(n.fastLonn),n.fastLonn-d.fastLonn,false],['Bonus',fmt(d.bonusMnd),fmt(n.bonusMnd),n.bonusMnd-d.bonusMnd,false]];
+    let h='';
+    rows.forEach(([l,vd,vn,df,dec])=>{const c=df>0?'positive':df<0?'negative':'';const s=df>0?'+':'';h+=`<tr><td>${l}</td><td class="col-today">${vd}</td><td class="col-new">${vn}</td><td class="${c}">${dec?s+fmtDec(df,2):s+fmt(Math.round(df))}</td></tr>`;});
+    const td=n.totalMnd-d.totalMnd,tc=td>0?'positive':td<0?'negative':'';
+    h+=`<tr class="row-total"><td>Total månedslønn</td><td class="col-today">${fmt(d.totalMnd)}</td><td class="col-new">${fmt(n.totalMnd)}</td><td class="${tc}">${td>=0?'+':''}${fmt(td)}</td></tr>`;
+    const p=d.totalMnd>0?((n.totalMnd/d.totalMnd-1)*100):0;
+    h+=`<tr class="row-diff"><td>Endring (%)</td><td class="col-today"></td><td class="col-new"></td><td class="${tc}">${p>=0?'+':''}${fmtDec(p,1)}%</td></tr>`;
+    tbody.innerHTML=h;
+  } else {
+    let hh='<tr><th></th>';
+    sc.forEach(s=>{hh+=`<th class="col-today">${s.label}<br><span class="scenario-header">Dagens</span></th><th class="col-new">${s.label}<br><span class="scenario-header">Ny modell</span></th><th>Diff</th>`;});
+    thead.innerHTML=hh+'</tr>';
+    const res=sc.map(s=>({d:calcMonthly(st,ans,s.soldPerDay,'dagens'),n:calcMonthly(st,ans,s.soldPerDay,'ny')}));
+    const rds=[{l:'Timelønn (eks smuss)',k:'timelonn',f:v=>fmtDec(v,2)},{l:'Fast lønn',k:'fastLonn',f:v=>fmt(v)},{l:'Smusstillegg',k:'smussMnd',f:v=>fmt(v)},{l:'Bonus',k:'bonusMnd',f:v=>fmt(v)}];
+    let h='';
+    rds.forEach(rd=>{h+=`<tr><td>${rd.l}</td>`;res.forEach(r=>{const df=r.n[rd.k]-r.d[rd.k];const c=df>0?'positive':df<0?'negative':'';const s=df>0?'+':'';h+=`<td class="col-today">${rd.f(r.d[rd.k])}</td><td class="col-new">${rd.f(r.n[rd.k])}</td><td class="${c}">${s}${fmt(Math.round(df))}</td>`;});h+='</tr>';});
+    h+='<tr class="row-total"><td>Total månedslønn</td>';
+    res.forEach(r=>{const df=r.n.totalMnd-r.d.totalMnd;const c=df>0?'positive':df<0?'negative':'';h+=`<td class="col-today">${fmt(r.d.totalMnd)}</td><td class="col-new">${fmt(r.n.totalMnd)}</td><td class="${c}">${df>=0?'+':''}${fmt(df)}</td>`;});
+    h+='</tr><tr class="row-diff"><td>Endring (%)</td>';
+    res.forEach(r=>{const p=r.d.totalMnd>0?((r.n.totalMnd/r.d.totalMnd-1)*100):0;const c=p>0?'positive':p<0?'negative':'';h+=`<td class="col-today"></td><td class="col-new"></td><td class="${c}">${p>=0?'+':''}${fmtDec(p,1)}%</td>`;});
+    h+='</tr>';
+    tbody.innerHTML=h;
+  }
+}
+
+function onStillingChange() {
+  const st=document.getElementById('selStilling').value;
+  const iM=['MEK','HJP_M'].includes(st),iA=st==='AUDI',iD=['FAG_D','HJP_D'].includes(st);
+  document.getElementById('deleControls').style.display=iD?'':'none';
+  document.getElementById('audiControls').style.display=iA?'':'none';
+  document.getElementById('varMekBonus').style.display=iM?'':'none';
+  document.getElementById('varAudiBonus').style.display=iA?'':'none';
+  document.getElementById('varDeleBrutto').style.display=iD?'':'none';
+  document.getElementById('varDeleDB').style.display=iD?'':'none';
+  document.getElementById('varKvalitet').style.display=iD?'':'none';
+  recalcAll();
+}
+
+function renderRateTables() {
+  // Bonus solgte timer
+  let h='';
+  BONUS_SOLGTE_TIMER.forEach(b=>{h+=`<tr><td>${fmtDec(b.fra,2)}</td><td class="static-val">${b.kr}</td></tr>`;});
+  document.querySelector('#tblBonusMekDagens tbody').innerHTML=h;
+  h='';
+  nyBonusSolgte.forEach((b,i)=>{h+=`<tr><td><input type="number" value="${b.fra}" step="0.5" min="0" max="20" onchange="nyBonusSolgte[${i}].fra=parseFloat(this.value);recalcAll()"></td><td><input type="number" value="${b.kr}" step="1" min="0" max="500" onchange="nyBonusSolgte[${i}].kr=parseFloat(this.value);recalcAll()"></td></tr>`;});
+  document.querySelector('#tblBonusMekNy tbody').innerHTML=h;
+
+  // Timesatser
+  h='';
+  Object.keys(TIMESATSER).forEach(key=>{const lb=(key==='HJP_M'||key==='HJP_D')?ANS_LABELS_HJP:ANS_LABELS;h+=`<table class="rate-table"><thead><tr><th colspan="2">${STILLING_NAMES[key]}</th></tr><tr><th>Ansiennitet</th><th>Kr/time</th></tr></thead><tbody>`;TIMESATSER[key].forEach((v,i)=>{h+=`<tr><td>${lb[i]}</td><td class="static-val">${fmtDec(v,2)}</td></tr>`;});h+='</tbody></table>';});
+  document.getElementById('tblTimesatserDagens').innerHTML=h;
+  h='';
+  Object.keys(nyTimesatser).forEach(key=>{const lb=(key==='HJP_M'||key==='HJP_D')?ANS_LABELS_HJP:ANS_LABELS;h+=`<table class="rate-table"><thead><tr><th colspan="2">${STILLING_NAMES[key]}</th></tr><tr><th>Ansiennitet</th><th>Kr/time</th></tr></thead><tbody>`;nyTimesatser[key].forEach((v,i)=>{h+=`<tr><td>${lb[i]}</td><td><input type="number" value="${v}" step="0.01" min="0" max="1000" onchange="nyTimesatser['${key}'][${i}]=parseFloat(this.value);recalcAll()"></td></tr>`;});h+='</tbody></table>';});
+  document.getElementById('tblTimesatserNy').innerHTML=h;
+
+  // Audi
+  h=`<tr><td>Bonus ved prod ≥40% (3,0t)</td><td class="static-val">${fmt(AUDI_BONUS.prod40)}</td></tr><tr><td>Max bonus ved DB >${AUDI_BONUS.dbTerskel}%</td><td class="static-val">${fmt(AUDI_BONUS.maxDB)}</td></tr>`;
+  document.querySelector('#tblAudiDagens tbody').innerHTML=h;
+  h=`<tr><td>Bonus ved prod ≥40%</td><td><input type="number" value="${nyAudiBonus.prod40}" step="100" min="0" max="20000" onchange="nyAudiBonus.prod40=parseFloat(this.value);recalcAll()"></td></tr><tr><td>Max bonus ved DB-terskel</td><td><input type="number" value="${nyAudiBonus.maxDB}" step="100" min="0" max="20000" onchange="nyAudiBonus.maxDB=parseFloat(this.value);recalcAll()"></td></tr><tr><td>DB-terskel (%)</td><td><input type="number" value="${nyAudiBonus.dbTerskel}" step="1" min="0" max="50" onchange="nyAudiBonus.dbTerskel=parseFloat(this.value);recalcAll()"></td></tr>`;
+  document.querySelector('#tblAudiNy tbody').innerHTML=h;
+
+  // Dele brutto
+  h=''; DELE_BRUTTO.forEach(b=>{h+=`<tr><td>${b.over}%</td><td class="static-val">${b.kr}</td></tr>`;});
+  document.querySelector('#tblDeleBruttoDagens tbody').innerHTML=h;
+  h=''; nyDeleBrutto.forEach((b,i)=>{h+=`<tr><td><input type="number" value="${b.over}" step="1" min="0" max="100" onchange="nyDeleBrutto[${i}].over=parseFloat(this.value);recalcAll()"></td><td><input type="number" value="${b.kr}" step="1" min="0" max="100" onchange="nyDeleBrutto[${i}].kr=parseFloat(this.value);recalcAll()"></td></tr>`;});
+  document.querySelector('#tblDeleBruttoNy tbody').innerHTML=h;
+
+  // Dele DB
+  h=''; DELE_DB.forEach(b=>{h+=`<tr><td>${b.over}%</td><td class="static-val">${b.kr}</td></tr>`;});
+  document.querySelector('#tblDeleDBDagens tbody').innerHTML=h;
+  h=''; nyDeleDB.forEach((b,i)=>{h+=`<tr><td><input type="number" value="${b.over}" step="1" min="0" max="100" onchange="nyDeleDB[${i}].over=parseFloat(this.value);recalcAll()"></td><td><input type="number" value="${b.kr}" step="1" min="0" max="100" onchange="nyDeleDB[${i}].kr=parseFloat(this.value);recalcAll()"></td></tr>`;});
+  document.querySelector('#tblDeleDBNy tbody').innerHTML=h;
+
+  // Kvalitet
+  h=`<tr><td>CEM/SCX oppnådd</td><td><input type="number" value="${nyKvalitetCEM}" step="1" min="0" max="100" onchange="nyKvalitetCEM=parseFloat(this.value);recalcAll()"></td></tr>`;
+  document.querySelector('#tblKvalitetNy tbody').innerHTML=h;
+
+  // Smuss
+  h=`<tr><td>Smusstillegg</td><td><input type="number" value="${nySmuss}" step="0.1" min="0" max="50" onchange="nySmuss=parseFloat(this.value);recalcAll()"></td></tr>`;
+  document.querySelector('#tblSmussNy tbody').innerHTML=h;
+}
+
+function resetNyModell() {
+  nyTimesatser=JSON.parse(JSON.stringify(TIMESATSER));
+  nyBonusSolgte=BONUS_SOLGTE_TIMER.map(b=>({...b}));
+  nyAudiBonus={...AUDI_BONUS};
+  nyDeleBrutto=DELE_BRUTTO.map(b=>({...b}));
+  nyDeleDB=DELE_DB.map(b=>({...b}));
+  nyKvalitetCEM=KVALITET_CEM;
+  nySmuss=SMUSS;
+  renderRateTables();
+  recalcAll();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+}
+
+renderRateTables();
+onStillingChange();
+</script>
+</body>
+</html>
