@@ -282,6 +282,50 @@ body {
       <strong>Ny modell</strong> (oransje) bruker dine egendefinerte satser – rediger bonussatser under tabellen og timesatser i fanen «Timesatser».
     </div>
 
+    <!-- Editable scenario levels MEK/HJP_M -->
+    <div class="controls-bar" id="scenarioControlsMek" style="display:none;">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Scenario 1 – Solgte t/dag</label>
+          <input type="number" id="scMek1" value="5.5" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 2 – Solgte t/dag</label>
+          <input type="number" id="scMek2" value="6.5" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 3 – Solgte t/dag</label>
+          <input type="number" id="scMek3" value="8.0" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 4 – Solgte t/dag</label>
+          <input type="number" id="scMek4" value="10.0" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Editable scenario levels AUDI -->
+    <div class="controls-bar" id="scenarioControlsAudi" style="display:none;">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Scenario 1 – Solgte t/dag</label>
+          <input type="number" id="scAudi1" value="2.5" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 2 – Solgte t/dag</label>
+          <input type="number" id="scAudi2" value="3.0" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 3 – Solgte t/dag</label>
+          <input type="number" id="scAudi3" value="4.0" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+        <div class="control-group">
+          <label>Scenario 4 – Solgte t/dag</label>
+          <input type="number" id="scAudi4" value="5.0" min="0" max="20" step="0.5" onchange="recalcAll()">
+        </div>
+      </div>
+    </div>
+
     <div class="comparison-section">
       <div class="section-header">
         <h2 id="compTitle">Fagarbeider mekanisk · 3 år ansiennitet</h2>
@@ -435,8 +479,20 @@ let nyKvalitetCEM = KVALITET_CEM;
 let nySmuss = SMUSS;
 
 function getScenarios(s) {
-  if (['MEK','HJP_M'].includes(s)) return [{label:'Lav (5,5 t/dag)',soldPerDay:5.5},{label:'Middels (6,5 t/dag)',soldPerDay:6.5},{label:'God (8,0 t/dag)',soldPerDay:8.0},{label:'Høy (10,0 t/dag)',soldPerDay:10.0}];
-  if (s==='AUDI') return [{label:'Under terskel (2,5 t)',soldPerDay:2.5},{label:'På terskel (3,0 t)',soldPerDay:3.0},{label:'God (4,0 t)',soldPerDay:4.0},{label:'Høy (5,0 t)',soldPerDay:5.0}];
+  if (['MEK','HJP_M'].includes(s)) {
+    const v1=parseFloat(document.getElementById('scMek1').value)||5.5;
+    const v2=parseFloat(document.getElementById('scMek2').value)||6.5;
+    const v3=parseFloat(document.getElementById('scMek3').value)||8.0;
+    const v4=parseFloat(document.getElementById('scMek4').value)||10.0;
+    return [{label:v1+' t/dag',soldPerDay:v1},{label:v2+' t/dag',soldPerDay:v2},{label:v3+' t/dag',soldPerDay:v3},{label:v4+' t/dag',soldPerDay:v4}];
+  }
+  if (s==='AUDI') {
+    const v1=parseFloat(document.getElementById('scAudi1').value)||2.5;
+    const v2=parseFloat(document.getElementById('scAudi2').value)||3.0;
+    const v3=parseFloat(document.getElementById('scAudi3').value)||4.0;
+    const v4=parseFloat(document.getElementById('scAudi4').value)||5.0;
+    return [{label:v1+' t/dag',soldPerDay:v1},{label:v2+' t/dag',soldPerDay:v2},{label:v3+' t/dag',soldPerDay:v3},{label:v4+' t/dag',soldPerDay:v4}];
+  }
   return [{label:'Scenario valgt i kontroller',soldPerDay:0}];
 }
 
@@ -523,6 +579,8 @@ function onStillingChange() {
   const iM=['MEK','HJP_M'].includes(st),iA=st==='AUDI',iD=['FAG_D','HJP_D'].includes(st);
   document.getElementById('deleControls').style.display=iD?'':'none';
   document.getElementById('audiControls').style.display=iA?'':'none';
+  document.getElementById('scenarioControlsMek').style.display=iM?'':'none';
+  document.getElementById('scenarioControlsAudi').style.display=iA?'':'none';
   document.getElementById('varMekBonus').style.display=iM?'':'none';
   document.getElementById('varAudiBonus').style.display=iA?'':'none';
   document.getElementById('varDeleBrutto').style.display=iD?'':'none';
@@ -531,14 +589,43 @@ function onStillingChange() {
   recalcAll();
 }
 
+function updateNyBonusFra() {
+  const start = nyBonusSolgte[0].fra;
+  for (let i=1; i<nyBonusSolgte.length; i++) {
+    nyBonusSolgte[i].fra = +(start + i*0.5).toFixed(2);
+  }
+}
+
+function onNyBonusStartChange(val) {
+  nyBonusSolgte[0].fra = parseFloat(val);
+  updateNyBonusFra();
+  renderBonusMekNy();
+  recalcAll();
+}
+
+function onNyBonusKrChange(i, val) {
+  nyBonusSolgte[i].kr = parseFloat(val);
+  recalcAll();
+}
+
+function renderBonusMekNy() {
+  let h='';
+  nyBonusSolgte.forEach((b,i)=>{
+    const fraCell = i===0
+      ? `<input type="number" value="${b.fra}" step="0.5" min="0" max="20" onchange="onNyBonusStartChange(this.value)">`
+      : `<span style="color:var(--moller-gray)">${fmtDec(b.fra,2)}</span>`;
+    h+=`<tr><td>${fraCell}</td><td><input type="number" value="${b.kr}" step="1" min="0" max="500" onchange="onNyBonusKrChange(${i},this.value)"></td></tr>`;
+  });
+  document.querySelector('#tblBonusMekNy tbody').innerHTML=h;
+}
+
 function renderRateTables() {
-  // Bonus solgte timer
+  // Bonus solgte timer – Dagens
   let h='';
   BONUS_SOLGTE_TIMER.forEach(b=>{h+=`<tr><td>${fmtDec(b.fra,2)}</td><td class="static-val">${b.kr}</td></tr>`;});
   document.querySelector('#tblBonusMekDagens tbody').innerHTML=h;
-  h='';
-  nyBonusSolgte.forEach((b,i)=>{h+=`<tr><td><input type="number" value="${b.fra}" step="0.5" min="0" max="20" onchange="nyBonusSolgte[${i}].fra=parseFloat(this.value);recalcAll()"></td><td><input type="number" value="${b.kr}" step="1" min="0" max="500" onchange="nyBonusSolgte[${i}].kr=parseFloat(this.value);recalcAll()"></td></tr>`;});
-  document.querySelector('#tblBonusMekNy tbody').innerHTML=h;
+  // Bonus solgte timer – Ny
+  renderBonusMekNy();
 
   // Timesatser
   h='';
